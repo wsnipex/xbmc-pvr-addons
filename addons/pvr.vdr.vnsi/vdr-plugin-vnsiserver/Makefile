@@ -17,7 +17,9 @@ VERSION = $(shell grep 'static const char \*VERSION *=' vnsi.h | awk '{ print $$
 
 # Use package data if installed...otherwise assume we're under the VDR source directory:
 PKGCFG = $(if $(VDRDIR),$(shell pkg-config --variable=$(1) $(VDRDIR)/vdr.pc),$(shell pkg-config --variable=$(1) vdr || pkg-config --variable=$(1) ../../../vdr.pc))
+ifeq ($(strip $(LIBDIR)),)
 LIBDIR = $(DESTDIR)$(call PKGCFG,libdir)
+endif
 LOCDIR = $(DESTDIR)$(call PKGCFG,locdir)
 #
 TMPDIR ?= /tmp
@@ -31,7 +33,7 @@ export CXXFLAGS = $(call PKGCFG,cxxflags)
 
 APIVERSION = $(call PKGCFG,apiversion)
 ifeq ($(strip $(APIVERSION)),)
-APIVERSION = $(shell grep 'define APIVERSION ' $(VDRDIR)/config.h | awk '{ print $$3 }' | sed -e 's/"//g')
+APIVERSION = $(shell grep 'define APIVERSION ' $(VDRDIR)/config.h 2>/dev/null | awk '{ print $$3 }' | sed -e 's/"//g')
 NOCONFIG := 1
 endif
 
@@ -39,22 +41,28 @@ endif
 API1733 := $(shell if [ "$(APIVERSION)" \< "1.7.34" ]; then echo true; fi; )
 
 ifdef API1733
+  ifndef DESTDIR
+    VDRSRC = $(VDRDIR)
+    VDRSRC ?= ../../..
+    ifeq ($(strip $(LIBDIR)),)
+        LIBDIR = $(VDRSRC)/PLUGINS/lib
+    endif
+  else
+  # if DESTDIR is set, we assume an out of VDR source tree build, e.g. packaging
+    LIBDIR := $(DESTDIR)$(LIBDIR)
+    VDRSRC = $(VDRDIR)
+  endif
 
-VDRSRC = $(VDRDIR)
-VDRSRC ?= ../../..
-ifeq ($(strip $(LIBDIR)),)
-LIBDIR = $(VDRSRC)/PLUGINS/lib
-endif
-
-ifndef NOCONFIG
-CXXFLAGS = $(call PKGCFG,cflags)
-CXXFLAGS += -fPIC
-else
--include $(VDRSRC)/Make.global
--include $(VDRSRC)/Make.config
-endif
+  ifndef NOCONFIG
+    CXXFLAGS = $(call PKGCFG,cflags)
+    CXXFLAGS += -fPIC
+  else
+      -include $(VDRSRC)/Make.global
+      -include $(VDRSRC)/Make.config
+  endif
 
 export CXXFLAGS
+INCLUDES += -I$(VDRSRC)/include
 endif
 
 
@@ -68,10 +76,6 @@ PACKAGE = vdr-$(ARCHIVE)
 SOFILE = libvdr-$(PLUGIN).so
 
 ### Includes and Defines (add further entries here):
-
-ifdef API1733
-INCLUDES += -I$(VDRSRC)/include
-endif
 
 DEFINES += -D_GNU_SOURCE -DPLUGIN_NAME_I18N='"$(PLUGIN)"' -DVNSI_SERVER_VERSION='"$(VERSION)"'
 
@@ -135,7 +139,9 @@ install-i18n: $(I18Nmsgs)
 $(SOFILE): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared $(OBJS) -o $@
 ifdef API1733
-	@cp $@ $(LIBDIR)/$@.$(APIVERSION)
+ifndef DESTDIR
+	cp $@ $(LIBDIR)/$@.$(APIVERSION) 
+endif
 endif
 
 install-lib: $(SOFILE)
