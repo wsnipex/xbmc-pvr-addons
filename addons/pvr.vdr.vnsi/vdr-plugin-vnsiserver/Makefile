@@ -17,8 +17,12 @@ VERSION = $(shell grep 'static const char \*VERSION *=' vnsi.h | awk '{ print $$
 
 # Use package data if installed...otherwise assume we're under the VDR source directory:
 PKGCFG = $(if $(VDRDIR),$(shell pkg-config --variable=$(1) $(VDRDIR)/vdr.pc),$(shell pkg-config --variable=$(1) vdr || pkg-config --variable=$(1) ../../../vdr.pc))
+ifeq ($(strip $(LIBDIR)),)
 LIBDIR = $(DESTDIR)$(call PKGCFG,libdir)
+endif
+ifeq ($(strip $(LOCDIR)),)
 LOCDIR = $(DESTDIR)$(call PKGCFG,locdir)
+endif
 #
 TMPDIR ?= /tmp
 
@@ -135,7 +139,7 @@ install-i18n: $(I18Nmsgs)
 $(SOFILE): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared $(OBJS) -o $@
 ifdef API1733
-	@cp $@ $(LIBDIR)/$@.$(APIVERSION)
+	@cp $@ $@.$(APIVERSION)
 endif
 
 install-lib: $(SOFILE)
