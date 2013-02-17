@@ -18,16 +18,22 @@ export DH_OPTIONS
 
 SHELL=/bin/bash
 DIST=$(shell lsb_release -c | awk '{ print $$2 }')
+#PVRAPI=$(shell cat debian/pvrapiversion)
+PVRAPI=$(shell awk '/XBMC_PVR_API_VERSION/ {gsub("\"",""); print $$3 }' xbmc/xbmc_pvr_types.h)
 
-.PHONY: create_changelogs
+.PHONY: debian/create_changelogs 
 
 %:
 	dh $@ --parallel
 
+%.in: 
+	@echo "Generating control file"
+	@sed "s/#APIVERSION#/$(PVRAPI)/g" debian/control.in > debian/control
+
 create_changelogs:
 	@echo "generating addon specific changelogs for $(DIST)"
 	debian/prepare-changelogs.sh $(DIST)
-
+	
 override_dh_clean:
 	dh_clean
 	find . \( -name "*.pvr" -o -name "config.status" -o -name "config.cache" -o -name "config.log" \
@@ -36,6 +42,7 @@ override_dh_clean:
 	-o -name "ltmain.sh" -o -name "missing" -o -name "libvdr-*.so.*" \
 	 \) -exec rm -f "{}" \;
 	$(MAKE) clean -C addons/pvr.vdr.vnsi/vdr-plugin-vnsiserver
+	debian/rules debian/control.in
 
 override_dh_auto_configure:
 	./bootstrap

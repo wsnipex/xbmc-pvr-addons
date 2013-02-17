@@ -12,17 +12,20 @@ else
 	dist=$1
 fi
 
+PVRAPI=$(awk '/XBMC_PVR_API_VERSION/ {gsub("\"",""); print $3 }' ../xbmc/xbmc_pvr_types.h)
+echo "detected Xbmc PVR-API: $PVRAPI"
+
 declare -A PACKAGES=(
-	["pvr.hts"]="xbmc-pvr-tvheadend-hts"
-	["pvr.vuplus"]="xbmc-pvr-vuplus"
-	["pvr.mediaportal.tvserver"]="xbmc-pvr-mediaportal-tvserver"
-	["pvr.dvbviewer"]="xbmc-pvr-dvbviewer"
-	["pvr.argustv"]="xbmc-pvr-argustv"
-	["pvr.mythtv.cmyth"]="xbmc-pvr-mythtv-cmyth"
-	["pvr.vdr.vnsi"]="xbmc-pvr-vdr-vnsi"
-	["pvr.nextpvr"]="xbmc-pvr-nextpvr"
-	["pvr.demo"]="xbmc-pvr-demo"
-	["pvr.njoy"]="xbmc-pvr-njoy"
+	["pvr.hts"]="xbmc-pvr-tvheadend-hts${PVRAPI}"
+	["pvr.vuplus"]="xbmc-pvr-vuplus${PVRAPI}"
+	["pvr.mediaportal.tvserver"]="xbmc-pvr-mediaportal-tvserver${PVRAPI}"
+	["pvr.dvbviewer"]="xbmc-pvr-dvbviewer${PVRAPI}"
+	["pvr.argustv"]="xbmc-pvr-argustv${PVRAPI}"
+	["pvr.mythtv.cmyth"]="xbmc-pvr-mythtv-cmyth${PVRAPI}"
+	["pvr.vdr.vnsi"]="xbmc-pvr-vdr-vnsi${PVRAPI}"
+	["pvr.nextpvr"]="xbmc-pvr-nextpvr${PVRAPI}"
+	["pvr.demo"]="xbmc-pvr-demo${PVRAPI}"
+	["pvr.njoy"]="xbmc-pvr-njoy${PVRAPI}"
 )
 
 
@@ -39,7 +42,7 @@ do
 
 	[[ -f ${PACKAGES["$package"]}.changelog ]] && mv ${PACKAGES["$package"]}.changelog ${PACKAGES["$package"]}.changelog.old
 
-	version="${aversion}-${tag}${dist}~pvrapi${pvrapiversion}"
+	version="${aversion}-${tag}${dist}"
 	echo "${version}" > ${PACKAGES["$package"]}.version
 	if [[ -f $changelog ]]
 	then
