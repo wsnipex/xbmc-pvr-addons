@@ -25,35 +25,37 @@ declare -A PACKAGES=(
 	["pvr.njoy"]="xbmc-pvr-njoy"
 )
 
+
 [[ $(basename $PWD) == "debian" ]] || cd debian
+[[ -f versiontag ]] && tag=$(cat versiontag) || tag="0"
 
 for package in "${!PACKAGES[@]}"
 do
 	echo "creating changelog for: $package"
 	changelog="../addons/$package/addon/changelog.txt"
 	addonxml="../addons/$package/addon/addon.xml.in"
-	version=$(awk -F'=' '!/<?xml/ && /version/ && !/>/ {gsub("\"",""); print $2}' $addonxml)
+	aversion=$(awk -F'=' '!/<?xml/ && /version/ && !/>/ {gsub("\"",""); print $2}' $addonxml)
 	pvrapiversion=$(awk -F'=' '/import addon="xbmc.pvr"/ {gsub("\"",""); gsub("/>",""); print $3}' $addonxml)
 
 	[[ -f ${PACKAGES["$package"]}.changelog ]] && mv ${PACKAGES["$package"]}.changelog ${PACKAGES["$package"]}.changelog.old
 
-	echo "${version}-0${dist}~pvrapi${pvrapiversion}" > ${PACKAGES["$package"]}.version
+	version="${aversion}-${tag}${dist}~pvrapi${pvrapiversion}"
+	echo "${version}" > ${PACKAGES["$package"]}.version
 	if [[ -f $changelog ]]
 	then
-		dch -c ${PACKAGES["$package"]}.changelog --create --empty --package xbmc-pvr-addons -v "${version}-0${dist}~pvrapi${pvrapiversion}" --distribution ${dist} --force-distribution 2>/dev/null $(cat $changelog | tail -80)
+		dch -c ${PACKAGES["$package"]}.changelog --create --empty --package xbmc-pvr-addons -v "${version}" --distribution ${dist} --force-distribution 2>/dev/null $(cat $changelog | tail -80)
 	else
-		dch -c ${PACKAGES["$package"]}.changelog --create --empty --package xbmc-pvr-addons -v "${version}-0${dist}~pvrapi${pvrapiversion}" --distribution ${dist} --force-distribution 2>/dev/null "no upstream changelog available"
+		dch -c ${PACKAGES["$package"]}.changelog --create --empty --package xbmc-pvr-addons -v "${version}" --distribution ${dist} --force-distribution 2>/dev/null "no upstream changelog available"
 	fi
+	version=""
 done
 
 # special handling for vdr-pluging-vnsiserver
 echo "creating changelog for: vdr-pluging-vnsiserver"
-version="1:"$(awk -F'=' '/\*VERSION/ {gsub("\"",""); gsub(" ",""); gsub(";",""); print $2}' ../addons/pvr.vdr.vnsi/vdr-plugin-vnsiserver/vnsi.h)"-0${dist}"
+version="1:"$(awk -F'=' '/\*VERSION/ {gsub("\"",""); gsub(" ",""); gsub(";",""); print $2}' ../addons/pvr.vdr.vnsi/vdr-plugin-vnsiserver/vnsi.h)"-${tag}${dist}"
 echo "${version}" > vdr-plugin-vnsiserver.version
 
 [[ -f "vdr-plugin-vnsiserver.changelog" ]] && mv vdr-plugin-vnsiserver.changelog vdr-plugin-vnsiserver.changelog.old
-dch -c vdr-plugin-vnsiserver.changelog --create --empty --package xbmc-pvr-addons -v"${version}" --distribution ${dist} --force-distribution 2>&1 "no upstream changelog available"
+dch -c vdr-plugin-vnsiserver.changelog --create --empty --package xbmc-pvr-addons -v"${version}" --distribution ${dist} --force-distribution 2>/dev/null "no upstream changelog available"
 
 exit 0
-
-
