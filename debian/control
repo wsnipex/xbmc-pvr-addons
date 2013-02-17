@@ -2,7 +2,7 @@ Source: xbmc-pvr-addons
 Section: video
 Priority: extra
 Maintainer: wsnipex <wsnipex@a1.net>
-Build-Depends: debhelper (>= 8.0.0), autoconf, autopoint | gettext, automake, libtool, libboost-thread-dev, libmysqlclient-dev, pkg-config, vdr-dev (>= 1.7.17)
+Build-Depends: debhelper (>= 8.0.0), autoconf, autopoint | gettext, automake, libtool, libboost-thread-dev, libmysqlclient-dev, pkg-config, vdr-dev (>= 1.7.17), devscripts, lsb-release
 Standards-Version: 3.9.3
 Homepage: http://xbmc.org
 Vcs-Git: git://github.com/opdenkamp/xbmc-pvr-addons.git

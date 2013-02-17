@@ -16,9 +16,17 @@
 # This has to be exported to make some magic below work.
 export DH_OPTIONS
 
+SHELL=/bin/bash
+DIST=$(shell lsb_release -c | awk '{ print $$2 }')
+
+.PHONY: create_changelogs
 
 %:
 	dh $@ --parallel
+
+create_changelogs:
+	@echo "generating addon specific changelogs for $(DIST)"
+	debian/prepare-changelogs.sh $(DIST)
 
 override_dh_clean:
 	dh_clean
@@ -38,10 +46,15 @@ override_dh_gencontrol:
 	dh_gencontrol
 
 override_dh_auto_build:
-	#cd addons/pvr.vdr.vnsi/vdr-plugin-vnsiserver
 	VDRDIR=/usr/include/vdr LIBDIR=$(CURDIR)/debian/vdr-plugin-vnsiserver/usr/lib/vdr/plugins LOCALEDIR=locale $(MAKE) compile -C addons/pvr.vdr.vnsi/vdr-plugin-vnsiserver
 	dh_auto_build
 
 override_dh_auto_install:
 	VDRDIR=/usr/include/vdr LIBDIR=$(CURDIR)/debian/vdr-plugin-vnsiserver/usr/lib/vdr/plugins LOCALEDIR=locale $(MAKE) install-lib -C addons/pvr.vdr.vnsi/vdr-plugin-vnsiserver
 	dh_auto_install
+
+override_dh_gencontrol: create_changelogs
+	for PACKAGE in $(shell cd debian && ls *.version | sed 's/.version//g'); do \
+             VERSION=$$(cat debian/$$PACKAGE.version) ;\
+             dh_gencontrol -p$$PACKAGE -- -ldebian/changelog -v$$VERSION ;\
+        done
