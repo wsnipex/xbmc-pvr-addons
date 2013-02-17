@@ -29,6 +29,8 @@ PVRAPI=$(shell awk '/XBMC_PVR_API_VERSION/ {gsub("\"",""); print $$3 }' xbmc/xbm
 %.in: 
 	@echo "Generating control file"
 	@sed "s/#APIVERSION#/$(PVRAPI)/g" debian/control.in > debian/control
+	@echo "Generating changelog"
+	@sed "s/#APIVERSION#/$(PVRAPI)/g" debian/changelog.tmp > debian/changelog
 
 create_changelogs:
 	@echo "generating addon specific changelogs for $(DIST)"
