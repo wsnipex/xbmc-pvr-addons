@@ -21,7 +21,7 @@ DIST=$(shell lsb_release -c | awk '{ print $$2 }')
 #PVRAPI=$(shell cat debian/pvrapiversion)
 PVRAPI=$(shell awk '/XBMC_PVR_API_VERSION/ {gsub("\"",""); print $$3 }' xbmc/xbmc_pvr_types.h)
 
-.PHONY: debian/create_changelogs 
+.PHONY: create_changelogs 
 
 %:
 	dh $@ --parallel

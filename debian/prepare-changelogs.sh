@@ -12,6 +12,8 @@ else
 	dist=$1
 fi
 
+[[ $(basename $PWD) == "debian" ]] || cd debian
+[[ -f versiontag ]] && tag=$(cat versiontag) || tag="0"
 PVRAPI=$(awk '/XBMC_PVR_API_VERSION/ {gsub("\"",""); print $3 }' ../xbmc/xbmc_pvr_types.h)
 echo "detected Xbmc PVR-API: $PVRAPI"
 
@@ -29,8 +31,6 @@ declare -A PACKAGES=(
 )
 
 
-[[ $(basename $PWD) == "debian" ]] || cd debian
-[[ -f versiontag ]] && tag=$(cat versiontag) || tag="0"
 
 for package in "${!PACKAGES[@]}"
 do
